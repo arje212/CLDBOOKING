@@ -12,8 +12,20 @@
   ],
   "routes": [
     {
+      "src": "/serviceworker.js",
+      "dest": "/staticfiles/booking/js/serviceworker.js",
+      "headers": {
+        "Service-Worker-Allowed": "/",
+        "Cache-Control": "no-cache"
+      }
+    },
+    {
+      "src": "/manifest.json",
+      "dest": "/staticfiles/booking/manifest.json"
+    },
+    {
       "src": "/static/(.*)",
-      "dest": "/static/$1"
+      "dest": "/staticfiles/$1"
     },
     {
       "src": "/(.*)",
