@@ -13,6 +13,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'pwa',
     'booking',
     "widget_tweaks",
 ]
@@ -83,3 +84,24 @@ STATICFILES_DIRS = [BASE_DIR / 'booking' / 'static']
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
+# ── PWA Settings ──────────────────────────────────────────────
+PWA_APP_NAME = 'TrainRoom'
+PWA_APP_DESCRIPTION = 'Training Room Booking System'
+PWA_APP_THEME_COLOR = '#4f46e5'
+PWA_APP_BACKGROUND_COLOR = '#f8fafc'
+PWA_APP_DISPLAY = 'standalone'
+PWA_APP_SCOPE = '/'
+PWA_APP_ORIENTATION = 'any'
+PWA_APP_START_URL = '/'
+PWA_APP_STATUS_BAR_COLOR = 'default'
+PWA_APP_ICONS = [
+    {'src': '/static/booking/img/icon-192.png', 'sizes': '192x192'},
+    {'src': '/static/booking/img/icon-512.png', 'sizes': '512x512'},
+]
+PWA_APP_SPLASH_SCREEN = [
+    {'src': '/static/booking/img/icon-512.png', 'media': '(device-width: 320px)'},
+]
+PWA_APP_DIR = 'ltr'
+PWA_APP_LANG = 'en-US'
+PWA_SERVICE_WORKER_PATH = os.path.join(BASE_DIR, 'booking/static/booking/js', 'serviceworker.js')
