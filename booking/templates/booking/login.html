@@ -1,0 +1,312 @@
+{% extends "booking/base.html" %}
+{% load static %}
+{% block title %}Login{% endblock %}
+{% block content %}
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@500&display=swap" rel="stylesheet">
+
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:      #f8fafc;
+    --surface: #ffffff;
+    --surface2:#f1f5f9;
+    --border:  #e2e8f0;
+    --accent:  #4f46e5;
+    --accent2: #ef4444;
+    --text:    #0f172a;
+    --muted:   #64748b;
+    --dim:     #94a3b8;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif !important;
+    background: var(--bg) !important;
+    color: var(--text) !important;
+    min-height: 100vh !important;
+    overflow: hidden !important;
+  }
+
+  .login-page {
+    min-height: 100vh;
+    display: flex;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .bg-dots {
+    position: fixed; inset: 0;
+    background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+    background-size: 28px 28px;
+    pointer-events: none; z-index: 0;
+    opacity: .5;
+  }
+
+  .orb { position: fixed; border-radius: 50%; filter: blur(80px); pointer-events: none; z-index: 0; }
+  .orb-1 { width:500px; height:500px; background:rgba(79,70,229,0.08); top:-150px; left:-100px; animation:drift1 13s ease-in-out infinite alternate; }
+  .orb-2 { width:400px; height:400px; background:rgba(99,102,241,0.06); bottom:-100px; right:-80px; animation:drift2 11s ease-in-out infinite alternate; }
+  @keyframes drift1 { to { transform: translate(40px,60px); } }
+  @keyframes drift2 { to { transform: translate(-40px,-50px); } }
+
+  .top-nav {
+    position: fixed; top:20px; right:28px;
+    z-index: 10; display:flex; align-items:center; gap:14px;
+  }
+  .top-nav a { font-size:13px; color:var(--muted); text-decoration:none; transition:.15s; }
+  .top-nav a:hover { color:var(--accent); }
+  .top-nav .nav-pill {
+    padding:7px 16px; border:1.5px solid var(--border);
+    border-radius:8px; background:var(--surface); color:var(--accent); font-weight:600;
+  }
+  .top-nav .nav-pill:hover { background:var(--accent); color:white; border-color:var(--accent); }
+
+  /* LEFT PANEL — shows bg image if set */
+  .left-panel {
+    position: relative; z-index: 1;
+    width: 55%; display: flex; flex-direction: column;
+    justify-content: center; padding: 60px;
+    {% if site.login_bg_image %}
+    background: linear-gradient(rgba(15,23,42,0.55), rgba(15,23,42,0.55)),
+                url('{{ site.login_bg_image.url }}') center/cover no-repeat;
+    {% endif %}
+  }
+  @media(max-width:900px){ .left-panel { display:none; } }
+
+  {% if site.login_bg_image %}
+  .brand, .hero-title, .hero-label { color: white !important; }
+  .hero-title span { color: #a5b4fc !important; }
+  .hero-sub { color: rgba(255,255,255,0.8) !important; }
+  .stat-num { color: white !important; }
+  .stat-label { color: rgba(255,255,255,0.65) !important; }
+  .feat {
+    background: rgba(255,255,255,0.08) !important;
+    border-color: rgba(255,255,255,0.18) !important;
+    color: rgba(255,255,255,0.85) !important;
+  }
+  .feat-icon { background: rgba(255,255,255,0.12) !important; }
+  {% endif %}
+
+  .brand {
+    display:flex; align-items:center; gap:10px;
+    font-size:17px; font-weight:700; color:var(--text); margin-bottom:60px;
+  }
+  .brand-dot {
+    width:10px; height:10px;
+    background:var(--accent); border-radius:50%;
+    box-shadow:0 0 0 3px rgba(79,70,229,.2);
+    animation:pulse 2.5s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100%{box-shadow:0 0 0 3px rgba(79,70,229,.2)} 50%{box-shadow:0 0 0 6px rgba(79,70,229,.08)} }
+
+  .hero-label { font-size:11px; text-transform:uppercase; letter-spacing:2px; color:var(--accent); margin-bottom:14px; font-weight:600; }
+  .hero-title { font-size:46px; font-weight:700; line-height:1.1; letter-spacing:-1.5px; color:var(--text); margin-bottom:18px; }
+  .hero-title span { color:var(--accent); }
+  .hero-sub { font-size:15px; color:var(--muted); line-height:1.7; max-width:380px; margin-bottom:44px; }
+
+  .features { display:flex; flex-direction:column; gap:10px; }
+  .feat {
+    display:flex; align-items:center; gap:14px;
+    padding:14px 18px;
+    background:var(--surface); border:1.5px solid var(--border);
+    border-radius:12px; font-size:13px; color:var(--muted); transition:.2s;
+    box-shadow:0 1px 4px rgba(0,0,0,.04);
+  }
+  .feat:hover { border-color:var(--accent); color:var(--text); }
+  .feat-icon {
+    width:34px; height:34px; background:var(--surface2);
+    border-radius:8px; display:flex; align-items:center; justify-content:center;
+    font-size:16px; flex-shrink:0;
+  }
+
+  .stats { display:flex; gap:28px; margin-top:36px; }
+  .stat-num { font-family:'DM Mono',monospace; font-size:26px; font-weight:500; color:var(--text); }
+  .stat-label { font-size:11px; color:var(--dim); margin-top:2px; }
+
+  .right-panel {
+    position:relative; z-index:1; flex:1;
+    display:flex; align-items:center; justify-content:center; padding:40px 32px;
+  }
+
+  .login-card {
+    width:100%; max-width:420px;
+    background:var(--surface);
+    border:1.5px solid var(--border);
+    border-radius:20px; padding:36px;
+    box-shadow:0 8px 40px rgba(0,0,0,0.08);
+    animation:cardIn .35s ease;
+  }
+  @keyframes cardIn { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+
+  .card-title { font-size:22px; font-weight:700; color:var(--text); letter-spacing:-.3px; margin-bottom:5px; }
+  .card-sub { font-size:13px; color:var(--muted); margin-bottom:26px; }
+
+  .form-group { margin-bottom:18px; }
+  .form-label { display:block; font-size:11px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:.8px; margin-bottom:7px; }
+
+  /* PASSWORD FIELD WITH EYE */
+  .pw-wrap { position:relative; }
+  .pw-wrap .form-input { padding-right: 42px; }
+  .pw-eye {
+    position:absolute; right:12px; top:50%; transform:translateY(-50%);
+    background:none; border:none; cursor:pointer; color:var(--dim);
+    font-size:16px; padding:4px; transition:.15s; line-height:1;
+  }
+  .pw-eye:hover { color:var(--accent); }
+
+  .form-input {
+    width:100%; background:var(--surface2);
+    border:1.5px solid var(--border); border-radius:10px;
+    padding:11px 14px; font-size:14px;
+    font-family:'DM Sans',sans-serif; color:var(--text); outline:none; transition:.2s;
+  }
+  .form-input::placeholder { color:var(--dim); }
+  .form-input:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(79,70,229,.1); background:white; }
+
+  .btn-login {
+    width:100%; padding:13px;
+    background:var(--accent); color:white; border:none;
+    border-radius:10px; font-size:14px; font-weight:700;
+    font-family:'DM Sans',sans-serif; cursor:pointer; transition:.2s; margin-top:6px;
+  }
+  .btn-login:hover { background:#4338ca; box-shadow:0 8px 24px rgba(79,70,229,.25); transform:translateY(-1px); }
+  .btn-login:active { transform:translateY(0); }
+
+  .divider { display:flex; align-items:center; gap:12px; margin:20px 0; color:var(--dim); font-size:11px; }
+  .divider::before, .divider::after { content:''; flex:1; height:1px; background:var(--border); }
+
+  .links { display:flex; flex-direction:column; gap:10px; text-align:center; }
+  .link-text { font-size:13px; color:var(--muted); }
+  .link-text a { color:var(--accent); text-decoration:none; font-weight:600; }
+  .link-text a:hover { text-decoration:underline; }
+
+  .msg-error {
+    background:#fef2f2; border:1.5px solid #fecaca;
+    color:#ef4444; border-radius:8px; padding:10px 14px;
+    font-size:13px; margin-bottom:18px;
+  }
+
+  /* RESET PASSWORD INLINE PANEL */
+  .reset-panel {
+    display:none;
+    background:var(--surface2); border:1.5px solid var(--border);
+    border-radius:12px; padding:18px; margin-top:16px;
+  }
+  .reset-panel.open { display:block; }
+  .reset-panel .reset-title { font-size:13px; font-weight:700; color:var(--text); margin-bottom:12px; }
+  .reset-panel .form-input { margin-bottom:10px; }
+  .reset-actions { display:flex; gap:8px; }
+  .btn-sm {
+    padding:8px 16px; border-radius:8px; font-size:13px; font-weight:600;
+    font-family:'DM Sans',sans-serif; cursor:pointer; border:none; transition:.15s;
+  }
+  .btn-sm-primary { background:var(--accent); color:white; }
+  .btn-sm-primary:hover { background:#4338ca; }
+  .btn-sm-cancel { background:var(--surface); border:1.5px solid var(--border); color:var(--muted); }
+  .btn-sm-cancel:hover { background:var(--surface2); }
+</style>
+
+<div class="top-nav">
+  <a href="#" onclick="toggleReset(event)">Help</a>
+  <a href="{% url 'register' %}" class="nav-pill">Register →</a>
+</div>
+
+<div class="login-page">
+  <div class="bg-dots"></div>
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+
+  <!-- LEFT -->
+  <div class="left-panel">
+    <div class="brand"><div class="brand-dot"></div> Training Rooms</div>
+    <div class="hero-label">Room Booking System</div>
+    <h1 class="hero-title">Book smarter,<br>work <span>better.</span></h1>
+    <p class="hero-sub">Manage training room reservations with ease. See availability at a glance and reserve your space in seconds.</p>
+    <div class="features">
+      <div class="feat"><div class="feat-icon">📅</div>Real-time calendar with live availability updates</div>
+      <div class="feat"><div class="feat-icon">⚡</div>Instant booking confirmations and notifications</div>
+      <div class="feat"><div class="feat-icon">🗂️</div>Manage trips, schedules, and room details in one place</div>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="stat-num">24/7</div><div class="stat-label">Available</div></div>
+      <div class="stat"><div class="stat-num">100%</div><div class="stat-label">Conflict-free</div></div>
+      <div class="stat"><div class="stat-num">Fast</div><div class="stat-label">Booking</div></div>
+    </div>
+  </div>
+
+  <!-- RIGHT -->
+  <div class="right-panel">
+    <div class="login-card">
+      <div class="card-title">Welcome Back 👋</div>
+      <div class="card-sub">Sign in to your account to continue</div>
+
+      {% if messages %}
+        <div class="msg-error">{% for message in messages %}{{ message }}{% endfor %}</div>
+      {% endif %}
+
+      <!-- LOGIN FORM -->
+      <form method="post" id="loginForm">
+        {% csrf_token %}
+        <div class="form-group">
+          <label class="form-label">Username</label>
+          <input name="username" required placeholder="Enter your username" class="form-input" value="{{ username }}">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <div class="pw-wrap">
+            <input type="password" name="password" id="loginPassword" required placeholder="••••••••" class="form-input">
+            <button type="button" class="pw-eye" onclick="toggleEye('loginPassword', this)" title="Show/hide password">👁</button>
+          </div>
+        </div>
+        <button type="submit" class="btn-login">Sign In →</button>
+      </form>
+
+      <div class="divider">or</div>
+      <div class="links">
+        <div class="link-text">No account? <a href="{% url 'register' %}">Create one</a></div>
+        {% if show_reset %}
+        <div class="link-text"><a href="#" onclick="toggleReset(event)">Forgot password?</a></div>
+        {% endif %}
+      </div>
+
+      <!-- INLINE RESET PASSWORD PANEL -->
+      <div class="reset-panel" id="resetPanel">
+        <div class="reset-title">🔑 Request Password Reset</div>
+        <form method="POST" action="{% url 'custom_reset_password' %}">
+          {% csrf_token %}
+          <input name="username" placeholder="Your username" class="form-input" required>
+          <div class="pw-wrap" style="margin-bottom:10px;">
+            <input type="password" name="new_password" id="resetPassword" placeholder="New password" class="form-input">
+            <button type="button" class="pw-eye" onclick="toggleEye('resetPassword', this)" title="Show/hide password">👁</button>
+          </div>
+          <div class="reset-actions">
+            <button type="submit" class="btn-sm btn-sm-primary">Submit Request</button>
+            <button type="button" class="btn-sm btn-sm-cancel" onclick="toggleReset(event)">Cancel</button>
+          </div>
+        </form>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  function toggleEye(inputId, btn) {
+    const input = document.getElementById(inputId);
+    const isHidden = input.type === 'password';
+    input.type = isHidden ? 'text' : 'password';
+    btn.textContent = isHidden ? '🙈' : '👁';
+  }
+
+  function toggleReset(e) {
+    e.preventDefault();
+    const panel = document.getElementById('resetPanel');
+    panel.classList.toggle('open');
+    if (panel.classList.contains('open')) {
+      panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }
+</script>
+
+{% endblock %}
