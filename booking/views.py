@@ -9,6 +9,7 @@ from calendar import monthrange
 from openpyxl import Workbook
 from django.contrib.auth.models import User
 import json
+from django.views.decorators.csrf import csrf_exempt
 
 from .models import (
     Room, Booking, Trip, Holiday, PasswordChangeRequest,
