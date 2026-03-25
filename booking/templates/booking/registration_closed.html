@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registration Closed</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #e53e3e 0%, #742a2a 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 600px;
+            width: 100%;
+            overflow: hidden;
+            text-align: center;
+        }
+        
+        .icon-container {
+            background: linear-gradient(135deg, #e53e3e 0%, #742a2a 100%);
+            padding: 40px;
+        }
+        
+        .icon-container svg {
+            width: 100px;
+            height: 100px;
+        }
+        
+        .content {
+            padding: 40px 30px;
+        }
+        
+        h1 {
+            color: #2d3748;
+            font-size: 32px;
+            margin-bottom: 15px;
+        }
+        
+        .message {
+            color: #718096;
+            font-size: 18px;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        
+        .training-name {
+            background: #fff5f5;
+            border-left: 4px solid #e53e3e;
+            padding: 15px 20px;
+            margin: 20px 0;
+            text-align: left;
+            border-radius: 8px;
+        }
+        
+        .training-name strong {
+            color: #e53e3e;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="icon-container">
+            <svg fill="white" viewBox="0 0 16 16">
+                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                <path d="M7.002 11a1 1 0 1 1 2 0 1 1 0 0 1-2 0zM7.1 4.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 4.995z"/>
+            </svg>
+        </div>
+        
+        <div class="content">
+            <h1>Registration Closed</h1>
+            
+            <p class="message">
+                {{ message|default:"Registration for this training is no longer available." }}
+            </p>
+            
+            <div class="training-name">
+                <strong>Training:</strong> {{ booking.title }}<br>
+                <strong>Date:</strong> {{ booking.start|date:"F d, Y" }}<br>
+                <strong>Time:</strong> {{ booking.start|date:"g:i A" }} - {{ booking.end|date:"g:i A" }}
+            </div>
+            
+            <p style="color: #718096; font-size: 14px; margin-top: 30px;">
+                Please contact your training coordinator for more information.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

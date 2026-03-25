@@ -112,3 +112,31 @@ PWA_APP_SPLASH_SCREEN = [
 PWA_APP_DIR = 'ltr'
 PWA_APP_LANG = 'en-US'
 PWA_SERVICE_WORKER_PATH = os.path.join(BASE_DIR, 'booking/static/booking/js', 'serviceworker.js')
+
+# ════════════════════════════════════════════════════════════════
+# ADD THESE TO YOUR EXISTING settings.py
+# ════════════════════════════════════════════════════════════════
+
+# ── Email Configuration ───────────────────────────────────────────
+# For development: Use console backend (prints emails to terminal)
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+# For production with Gmail SMTP:
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# EMAIL_HOST = 'smtp.gmail.com'
+# EMAIL_PORT = 587
+# EMAIL_USE_TLS = True
+# EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', 'your-email@gmail.com')
+# EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', 'your-app-password')
+# DEFAULT_FROM_EMAIL = 'TrainRoom System <your-email@gmail.com>'
+
+# For development only (console backend)
+DEFAULT_FROM_EMAIL = 'trainroom@example.com'
+
+# ── Site URL (for QR code generation) ─────────────────────────────
+# Change this to your actual domain in production
+SITE_URL = os.environ.get('SITE_URL', 'http://localhost:8000')
+
+# For production on Vercel or custom domain:
+# SITE_URL = 'https://yourdomain.com'
+# SITE_URL = 'https://your-app.vercel.app'

@@ -42,7 +42,6 @@
   .nav-item:hover,.nav-item.active { background:var(--surface2); color:var(--text); border-color:var(--border); }
   .nav-item.active { color:var(--accent); background:#eef2ff; border-color:#c7d2fe; }
 
-  /* 🆕 TODO WIDGET */
   .todo-widget { display:flex; flex-direction:column; gap:5px; }
   .todo-item { display:flex; align-items:center; gap:8px; padding:7px 10px; border-radius:var(--radius-sm); background:var(--surface2); border:1.5px solid var(--border); font-size:12px; transition:.15s; cursor:pointer; text-decoration:none; }
   .todo-item:hover { border-color:var(--accent); background:#eef2ff; }
@@ -148,10 +147,21 @@
   .detail-row:last-of-type { border-bottom:none; }
   .detail-row .label { color:var(--muted); }
   .detail-row .val { font-weight:600; color:var(--text); }
-  .btn-cancel-booking { display:flex; align-items:center; justify-content:center; margin-top:16px; padding:10px; border-radius:var(--radius-sm); background:#fef2f2; border:1.5px solid #fecaca; color:var(--accent2); font-size:13px; font-weight:600; cursor:pointer; transition:.2s; font-family:'DM Sans',sans-serif; width:100%; }
+
+  /* 🆕 VIEW DETAILS BUTTON */
+  .btn-view-booking {
+    display:flex; align-items:center; justify-content:center; gap:8px;
+    margin-top:14px; padding:10px 14px; border-radius:var(--radius-sm);
+    background:#eef2ff; border:1.5px solid #c7d2fe;
+    color:var(--accent); font-size:13px; font-weight:600;
+    text-decoration:none; transition:.2s;
+  }
+  .btn-view-booking:hover { background:#e0e7ff; border-color:var(--accent); box-shadow:0 2px 12px rgba(79,70,229,.15); }
+
+  .btn-cancel-booking { display:flex; align-items:center; justify-content:center; margin-top:8px; padding:10px; border-radius:var(--radius-sm); background:#fef2f2; border:1.5px solid #fecaca; color:var(--accent2); font-size:13px; font-weight:600; cursor:pointer; transition:.2s; font-family:'DM Sans',sans-serif; width:100%; }
   .btn-cancel-booking:hover { background:#fee2e2; }
 
-  /* 🆕 FLOATING CHAT BUTTON */
+  /* FLOATING CHAT BUTTON */
   .float-chat { position:fixed; bottom:28px; right:28px; z-index:500; width:52px; height:52px; background:linear-gradient(135deg,#10b981,#059669); border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 20px rgba(16,185,129,.4); cursor:pointer; text-decoration:none; transition:.25s; font-size:22px; }
   .float-chat:hover { transform:scale(1.1) rotate(-10deg); box-shadow:0 8px 28px rgba(16,185,129,.5); }
 
@@ -188,7 +198,6 @@
       <a class="nav-item" href="{% url 'project_list' %}">🗂 Projects</a>
     </div>
 
-    <!-- 🆕 TODO PREVIEW -->
     {% if todos %}
     <div>
       <div class="sidebar-label">Pending Tasks</div>
@@ -312,7 +321,7 @@
   </div>
 </div>
 
-<!-- 🆕 FLOATING CHAT BUTTON -->
+<!-- FLOATING CHAT BUTTON -->
 <a href="{% url 'chat_view' %}" class="float-chat" title="Team Chat">💬</a>
 
 <!-- BOOKING FORM MODAL -->
@@ -366,6 +375,10 @@
     <div class="detail-row"><span class="label">Date</span><span class="val" id="detailDate">—</span></div>
     <div class="detail-row"><span class="label">Time</span><span class="val" id="detailTime">—</span></div>
     <div class="detail-row"><span class="label">Total Cost</span><span class="val" id="detailCost" style="color:var(--accent3);">—</span></div>
+
+    <!-- 🆕 VIEW DETAILS & REGISTRATION LINK BUTTON -->
+    <a class="btn-view-booking" id="viewBookingBtn" href="#">🔗 View Details &amp; Registration Link</a>
+
     <button class="btn-cancel-booking" id="cancelBookingBtn">Cancel Booking</button>
   </div>
 </div>
@@ -402,6 +415,8 @@ document.addEventListener('DOMContentLoaded', function () {
       const cost = e.total_cost;
       document.getElementById('detailCost').textContent = cost > 0 ? '₱' + parseFloat(cost).toFixed(2) : 'Free';
       document.getElementById('cancelBookingBtn').dataset.bookingId = info.event.id;
+      // 🆕 Set the view details link
+      document.getElementById('viewBookingBtn').href = '/bookings/' + info.event.id + '/';
       document.getElementById('bookingDetailsModal').classList.add('open');
     }
   });
@@ -422,6 +437,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const cost = parseFloat(el.dataset.cost || 0);
     document.getElementById('detailCost').textContent = cost > 0 ? '₱' + cost.toFixed(2) : 'Free';
     document.getElementById('cancelBookingBtn').dataset.bookingId = el.dataset.bookingId;
+    // 🆕 Set the view details link
+    document.getElementById('viewBookingBtn').href = '/bookings/' + el.dataset.bookingId + '/';
     document.getElementById('bookingDetailsModal').classList.add('open');
   };
 

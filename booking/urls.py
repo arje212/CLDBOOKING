@@ -34,6 +34,16 @@ urlpatterns = [
     path("bookings/",                        views.booking_list,   name="booking_list"),
     path("cancel-booking/<int:booking_id>/", views.cancel_booking, name="cancel_booking"),
     path("rooms/choose/",                    views.choose_room,    name="choose_room"),
+    
+    # 🆕 Booking Detail with QR Code and Attendees
+    path("bookings/<int:booking_id>/", views.booking_detail, name="booking_detail"),
+    path("bookings/<int:booking_id>/attendees/", views.attendee_list, name="attendee_list"),
+    path("bookings/<int:booking_id>/qr/download/", views.download_qr_code, name="download_qr_code"),
+    path("bookings/<int:booking_id>/qr/regenerate/", views.regenerate_qr_code, name="regenerate_qr_code"),
+
+    # ── 🆕 ATTENDEE REGISTRATION (PUBLIC) ─────────────────────────
+    path("register/<int:booking_id>/", views.attendee_register, name="attendee_register"),
+    path("register/success/<int:attendee_id>/", views.attendee_success, name="attendee_success"),
 
     # ── Trips ─────────────────────────────────────────────────────
     path("trips/new/", views.trip_create, name="trip_create"),

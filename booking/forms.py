@@ -2,7 +2,7 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
-from .models import Booking, Trip, Holiday, Profile, PasswordChangeRequest
+from .models import Booking, Trip, Holiday, Profile, PasswordChangeRequest, Attendee
 
 
 ALL_COLOR_CHOICES = [
@@ -48,7 +48,6 @@ class SimplePasswordField(forms.CharField):
         super().__init__(*args, **kwargs)
 
     def validate(self, value):
-        # Only check that it's not empty
         if not value:
             raise ValidationError("Password cannot be empty.")
 
@@ -85,7 +84,7 @@ class RegisterForm(forms.Form):
             username=self.cleaned_data['username'],
             email=self.cleaned_data['email'],
             is_staff=True,
-            is_active=False,  # needs admin approval
+            is_active=False,
         )
         user.set_password(self.cleaned_data['password1'])
         if commit:
@@ -132,3 +131,68 @@ class PasswordChangeRequestForm(forms.ModelForm):
         widgets = {
             'new_password': forms.PasswordInput(attrs={'class': 'input input-bordered w-full'}),
         }
+
+
+# ════════════════════════════════════════════════════════════════
+# 🆕 ATTENDEE REGISTRATION FORM
+# ════════════════════════════════════════════════════════════════
+
+class AttendeeForm(forms.ModelForm):
+    """
+    Form for attendee registration
+    Validates duplicate email per booking
+    """
+    class Meta:
+        model = Attendee
+        fields = ['name', 'email', 'phone', 'notes']
+        widgets = {
+            'name': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Juan Dela Cruz',
+                'required': True
+            }),
+            'email': forms.EmailInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'juan@example.com',
+                'required': True
+            }),
+            'phone': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': '+63 912 345 6789 (optional)'
+            }),
+            'notes': forms.Textarea(attrs={
+                'class': 'form-control',
+                'placeholder': 'Any special requirements? (optional)',
+                'rows': 3
+            }),
+        }
+        labels = {
+            'name': 'Full Name',
+            'email': 'Email Address',
+            'phone': 'Phone Number',
+            'notes': 'Notes',
+        }
+
+    def __init__(self, *args, **kwargs):
+        self.booking = kwargs.pop('booking', None)
+        super().__init__(*args, **kwargs)
+
+    def clean_email(self):
+        """Validate duplicate email for this booking"""
+        email = self.cleaned_data.get('email')
+        if self.booking and Attendee.objects.filter(
+            booking=self.booking,
+            email=email
+        ).exists():
+            raise ValidationError(
+                f"This email is already registered for {self.booking.title}. "
+                "Each person can only register once per training."
+            )
+        return email
+
+    def clean_name(self):
+        """Ensure name is not empty or just whitespace"""
+        name = self.cleaned_data.get('name', '').strip()
+        if not name:
+            raise ValidationError("Please enter your full name.")
+        return name

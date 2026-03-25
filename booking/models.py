@@ -2,6 +2,12 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.urls import reverse
+from django.conf import settings
+import qrcode
+from io import BytesIO
+from django.core.files import File
+from PIL import Image
 
 
 # ─── ROOM ────────────────────────────────────────────────────────────────────
@@ -15,7 +21,6 @@ class Room(models.Model):
     image          = models.ImageField(upload_to='room_images/', blank=True, null=True)
     projector      = models.CharField(max_length=3, choices=[("Yes","Yes"),("No","No")], default="No")
     speaker        = models.CharField(max_length=3, choices=[("Yes","Yes"),("No","No")], default="No")
-    # 🆕 Pricing — used for billing per booking
     price_per_hour = models.DecimalField(
         max_digits=10, decimal_places=2, default=0.00,
         help_text="Room rental cost per hour (PHP)"
@@ -56,12 +61,14 @@ class Booking(models.Model):
     created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='bookings')
     color      = models.CharField(max_length=7, blank=True, null=True)
     status     = models.CharField(max_length=20, choices=STATUS_CHOICES, default="Pending")
-
-    # 🆕 Billing — auto-computed on every save
     hours_used = models.DecimalField(max_digits=6,  decimal_places=2, default=0)
     total_cost = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    
+    # 🆕 QR Code field for attendee registration
+    qr_code = models.ImageField(upload_to='qr_codes/', blank=True, null=True)
 
     def save(self, *args, **kwargs):
+        # Compute billing
         if self.start and self.end:
             delta = (self.end - self.start).total_seconds() / 3600
             self.hours_used = round(delta, 2)
@@ -70,13 +77,100 @@ class Booking(models.Model):
                 self.total_cost = round(float(self.hours_used) * float(room.price_per_hour), 2)
             except Room.DoesNotExist:
                 self.total_cost = 0
+        
+        # Save first to get ID
+        is_new = self.pk is None
         super().save(*args, **kwargs)
+        
+        # 🆕 Generate QR code after first save (so we have an ID)
+        if is_new or not self.qr_code:
+            self.generate_qr_code()
+            # Update only qr_code field to avoid recursion
+            Booking.objects.filter(pk=self.pk).update(qr_code=self.qr_code.name)
+
+    def generate_qr_code(self):
+        """Generate QR code for attendee registration link"""
+        try:
+            # Build registration URL
+            registration_url = self.get_registration_url()
+            
+            # Create QR code
+            qr = qrcode.QRCode(
+                version=1,
+                error_correction=qrcode.constants.ERROR_CORRECT_H,
+                box_size=10,
+                border=4,
+            )
+            qr.add_data(registration_url)
+            qr.make(fit=True)
+            
+            # Create image
+            img = qr.make_image(fill_color="black", back_color="white")
+            img = img.convert('RGB')
+            
+            # Save to BytesIO
+            buffer = BytesIO()
+            img.save(buffer, format='PNG')
+            buffer.seek(0)
+            
+            # Save to field
+            filename = f'booking_{self.id}_qr.png'
+            self.qr_code.save(filename, File(buffer), save=False)
+            buffer.close()
+        except Exception as e:
+            print(f"Error generating QR code: {e}")
+
+    def get_registration_url(self):
+        """Get full URL for attendee registration"""
+        # Get site URL from settings or request
+        site_url = getattr(settings, 'SITE_URL', 'http://localhost:8000')
+        path = reverse('attendee_register', kwargs={'booking_id': self.id})
+        return f"{site_url}{path}"
+    
+    def get_attendee_count(self):
+        """Count registered attendees"""
+        return self.attendee_set.count()
 
     def display_color(self):
         return self.color or getattr(self.created_by.profile, 'color', '#6366F1')
 
     def __str__(self):
         return f"{self.title} ({self.room})"
+
+
+# ─── 🆕 ATTENDEE ──────────────────────────────────────────────────────────────
+class Attendee(models.Model):
+    """
+    Attendee Registration Model
+    Stores individual registrations for each booking/training
+    """
+    booking = models.ForeignKey(
+        Booking,
+        on_delete=models.CASCADE,
+        related_name='attendee_set',
+        help_text="Training/booking this person registered for"
+    )
+    name = models.CharField(max_length=200, help_text="Full name")
+    email = models.EmailField(help_text="Email for notifications")
+    registered_at = models.DateTimeField(auto_now_add=True)
+    
+    # Email tracking
+    confirmation_sent = models.BooleanField(default=False)
+    reminder_sent = models.BooleanField(default=False)
+    
+    # Optional fields
+    phone = models.CharField(max_length=20, blank=True)
+    notes = models.TextField(blank=True)
+
+    class Meta:
+        # Prevent duplicate email per booking
+        unique_together = ('booking', 'email')
+        ordering = ['registered_at']
+        verbose_name = 'Attendee'
+        verbose_name_plural = 'Attendees'
+
+    def __str__(self):
+        return f"{self.name} - {self.booking.title}"
 
 
 # ─── TRIP ────────────────────────────────────────────────────────────────────
@@ -113,7 +207,7 @@ class PasswordChangeRequest(models.Model):
         return f"{self.user.username} — {'Approved' if self.approved else 'Pending'}"
 
 
-# ─── 🆕 TODO LIST ─────────────────────────────────────────────────────────────
+# ─── TODO LIST ────────────────────────────────────────────────────────────────
 class Todo(models.Model):
     PRIORITY_CHOICES = [
         ("Low",    "Low"),
@@ -135,7 +229,7 @@ class Todo(models.Model):
         return f"[{self.user.username}] {self.title}"
 
 
-# ─── 🆕 CHAT MESSAGE ──────────────────────────────────────────────────────────
+# ─── CHAT MESSAGE ─────────────────────────────────────────────────────────────
 class ChatMessage(models.Model):
     sender     = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_messages')
     message    = models.TextField()
@@ -149,7 +243,7 @@ class ChatMessage(models.Model):
         return f"{self.sender.username}: {self.message[:50]}"
 
 
-# ─── 🆕 FUTURE PROJECT ────────────────────────────────────────────────────────
+# ─── FUTURE PROJECT ───────────────────────────────────────────────────────────
 class FutureProject(models.Model):
     STATUS_CHOICES = [
         ("Planned",     "Planned"),
@@ -163,7 +257,6 @@ class FutureProject(models.Model):
     status      = models.CharField(max_length=20, choices=STATUS_CHOICES, default="Planned")
     created_by  = models.ForeignKey(User, on_delete=models.CASCADE, related_name='projects')
     created_at  = models.DateTimeField(auto_now_add=True)
-    # TESDA / external training info
     provider    = models.CharField(max_length=200, blank=True, help_text="e.g. TESDA, External Trainer")
     budget      = models.DecimalField(max_digits=12, decimal_places=2, default=0)
 
@@ -173,6 +266,8 @@ class FutureProject(models.Model):
     def __str__(self):
         return self.title
 
+
+# ─── SITE SETTINGS ────────────────────────────────────────────────────────────
 class SiteSettings(models.Model):
     login_bg_image = models.ImageField(upload_to='site/', blank=True, null=True)
     login_bg_overlay = models.FloatField(default=0.5, help_text="0.0 to 1.0")
